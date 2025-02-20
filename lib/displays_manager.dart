@@ -11,6 +11,7 @@ const _listDisplay = "listDisplay";
 const _showPresentation = "showPresentation";
 const _hidePresentation = "hidePresentation";
 const _transferDataToPresentation = "transferDataToPresentation";
+const String secondaryDisplayMethodChannelId = "presentation_displays_plugin_engine";
 
 /// Display category: secondary display.
 /// <p>
@@ -38,11 +39,26 @@ class DisplayManager {
 
   late MethodChannel? _displayMethodChannel;
   late EventChannel? _displayEventChannel;
+  late MethodChannel? _secondaryDisplayMethodChannel;
+
+  // StreamController for listening to secondary display data
+  final StreamController<dynamic> _secondaryDisplayStreamController =
+      StreamController<dynamic>.broadcast();
 
   DisplayManager() {
     _displayMethodChannel = MethodChannel(_displayMethodChannelId);
     _displayEventChannel = EventChannel(_displayEventChannelId);
+    _secondaryDisplayMethodChannel = MethodChannel(secondaryDisplayMethodChannelId);
+
+      // Set up the method call handler to listen for data from native
+    _secondaryDisplayMethodChannel?.setMethodCallHandler((call) async {
+        _secondaryDisplayStreamController.add(call.arguments);
+    });
   }
+
+  /// Exposes a stream to listen for data being sent to the secondary display
+  Stream<dynamic> get secondaryDisplayDataStream =>
+      _secondaryDisplayStreamController.stream;
 
   /// Gets all currently valid logical displays of the specified category.
   /// <p>
@@ -71,6 +87,8 @@ class DisplayManager {
     }
     return displays;
   }
+
+
 
   /// Gets the name of the display by [displayId] of [getDisplays].
   /// <p>

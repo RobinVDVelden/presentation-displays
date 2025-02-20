@@ -83,7 +83,7 @@ public class SwiftPresentationDisplaysPlugin: NSObject, FlutterPlugin {
                 if let json = try JSONSerialization.jsonObject(with: data ?? Data(), options : .allowFragments) as? Dictionary<String,Any>
                 {
                     print(json)
-                    showPresentation(index:json["displayId"] as? Int ?? 1, routerName: json["routerName"] as? String ?? "presentation")
+                    showPresentation(index:json["displayId"] as? Int ?? 1)
                     result(true)
                 }
                 else {
@@ -127,21 +127,31 @@ public class SwiftPresentationDisplaysPlugin: NSObject, FlutterPlugin {
 
     }
 
-    private func showPresentation(index:Int, routerName:String )
-    {
-        if index>0 && index < self.screens.count && self.additionalWindows.keys.contains(self.screens[index])
-        {
-            let screen=self.screens[index]
-            let window=self.additionalWindows[screen]
+    private func showPresentation(index: Int) {
+        if index > 0 && index < self.screens.count && self.additionalWindows.keys.contains(self.screens[index]) {
+            let screen = self.screens[index]
+            let window = self.additionalWindows[screen]
 
-            if (window != nil){
-                window!.isHidden=false
-                if (window!.rootViewController == nil || !(window!.rootViewController is FlutterViewController)){
-                    let extVC = FlutterViewController(project: nil, initialRoute: routerName, nibName: nil, bundle: nil)
-                    SwiftPresentationDisplaysPlugin.controllerAdded!(extVC)
-                    window?.rootViewController = extVC
+            if let window = window {
+                window.isHidden = false
+                if window.rootViewController == nil || !(window.rootViewController is FlutterViewController) {
+                    
+                    // Create a Flutter engine
+                    let flutterEngine = FlutterEngine(name: "presentation_engine")
+                    
+                    // Run the engine with a custom entry point
+                    flutterEngine.run(withEntrypoint: "mainExternalDisplay")
 
-                    self.flutterEngineChannel = FlutterMethodChannel(name: "presentation_displays_plugin_engine", binaryMessenger: extVC.binaryMessenger)
+                    // Create the FlutterViewController with the engine
+                    let extVC = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
+
+                    SwiftPresentationDisplaysPlugin.controllerAdded?(extVC)
+                    window.rootViewController = extVC
+
+                    self.flutterEngineChannel = FlutterMethodChannel(
+                        name: "presentation_displays_plugin_engine",
+                        binaryMessenger: extVC.binaryMessenger
+                    )
                 }
             }
         }

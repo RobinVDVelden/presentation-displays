@@ -25,7 +25,6 @@ class SecondaryDisplay extends StatefulWidget {
 }
 
 class _SecondaryDisplayState extends State<SecondaryDisplay> {
-  final _presentationChannel = "presentation_displays_plugin_engine";
   late MethodChannel? _presentationMethodChannel;
 
   @override
@@ -40,7 +39,7 @@ class _SecondaryDisplayState extends State<SecondaryDisplay> {
   }
 
   _addListenerForPresentation(ArgumentsCallback function) {
-    _presentationMethodChannel = MethodChannel(_presentationChannel);
+    _presentationMethodChannel = MethodChannel(secondaryDisplayMethodChannelId);
     _presentationMethodChannel?.setMethodCallHandler((call) async {
       function(call.arguments);
     });
